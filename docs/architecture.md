@@ -201,3 +201,13 @@ Esta arquitetura fornece uma base incrivelmente sólida, escalável e moderna pa
 ---
 > [!IMPORTANT]
 > **Lembrete de Código Limpo:** Toda a lógica de negócio principal (cálculos de preço, regras de desconto de convênio e validações de controlado) deve residir no pacote `domain` e nunca vazar para os controllers do Spring ou classes de persistência do MongoDB.
+
+---
+
+## 9. Decisões Arquiteturais Documentadas (ADRs)
+
+Para mais detalhes sobre as decisões fundamentais tomadas durante o ciclo de vida e a evolução técnica do FarmoSync, consulte os seguintes registros formais:
+
+*   **[ADR 001: Padrão Resiliente de Mensageria com Kafka Dead Letter Queue (DLQ)](decisions/0001-kafka-dead-letter-queue.md)** - Documentação detalhada sobre a estratégia de isolamento de falhas corporativas e retentativas físicas no processamento de receitas e estoque.
+*   **[ADR 002: Consistência Atômica com Transactional Outbox e Transações ACID no MongoDB](decisions/0002-transactional-outbox-mongodb.md)** - Detalhamento técnico da persistência atômica atrelada às sessões ACID do MongoDB e entrega *at-least-once* via agendador assíncrono.
+*   **[ADR 003: Observabilidade e Instrumentação de Métricas com Actuator e Prometheus](decisions/0003-prometheus-actuator-monitoring.md)** - Visão operacional de métricas JVM, pool do MongoDB, latências HTTP e monitoramento de *consumer lag* do Kafka.
