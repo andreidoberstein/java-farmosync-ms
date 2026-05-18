@@ -28,7 +28,7 @@ public class BaixarEstoqueUseCase {
 
     public void processarBaixaEstoque(ReceitaValidadaEvent event) {
         try {
-            idempotenceRepository.save(IdempotenceKeyDocument.builder()
+            idempotenceRepository.insert(IdempotenceKeyDocument.builder()
                     .id(event.getVendaId())
                     .dataProcessamento(LocalDateTime.now())
                     .build());
