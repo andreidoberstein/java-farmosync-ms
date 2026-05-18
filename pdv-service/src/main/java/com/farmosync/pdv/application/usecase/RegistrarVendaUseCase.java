@@ -1,0 +1,71 @@
+package com.farmosync.pdv.application.usecase;
+
+import com.farmosync.pdv.application.dto.ItemRequest;
+import com.farmosync.pdv.application.dto.RegistrarVendaRequest;
+import com.farmosync.pdv.application.dto.VendaResponse;
+import com.farmosync.pdv.application.ports.VendaEventPublisher;
+import com.farmosync.pdv.domain.model.ItemVenda;
+import com.farmosync.pdv.domain.model.Lote;
+import com.farmosync.pdv.domain.model.Venda;
+import com.farmosync.pdv.domain.model.VendaStatus;
+import com.farmosync.pdv.domain.repository.VendaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class RegistrarVendaUseCase {
+    private final VendaRepository vendaRepository;
+    private final VendaEventPublisher vendaEventPublisher;
+
+    public VendaResponse executar(RegistrarVendaRequest request) {
+        List<ItemVenda> domainItens = request.getItens().stream()
+                .map(this::mapToDomainItem)
+                .collect(Collectors.toList());
+
+        Venda venda = Venda.builder()
+                .id(UUID.randomUUID().toString())
+                .cpfCliente(request.getCpfCliente())
+                .itens(domainItens)
+                .status(VendaStatus.PENDENTE)
+                .dataCriacao(LocalDateTime.now())
+                .build();
+
+        venda.calcularValorTotal();
+
+        Venda savedVenda = vendaRepository.salvar(venda);
+
+        vendaEventPublisher.publicarVendaEmitida(savedVenda);
+
+        return VendaResponse.builder()
+                .id(savedVenda.getId())
+                .cpfCliente(savedVenda.getCpfCliente())
+                .valorTotal(savedVenda.getValorTotal())
+                .status(savedVenda.getStatus().name())
+                .dataCriacao(savedVenda.getDataCriacao())
+                .build();
+    }
+
+    private ItemVenda mapToDomainItem(ItemRequest itemRequest) {
+        Lote lote = null;
+        if (itemRequest.getNumeroLote() != null && !itemRequest.getNumeroLote().isBlank()) {
+            lote = Lote.builder()
+                    .numeroLote(itemRequest.getNumeroLote())
+                    .dataValidade(itemRequest.getDataValidade())
+                    .build();
+        }
+
+        return ItemVenda.builder()
+                .produtoId(itemRequest.getProdutoId())
+                .nomeProduto(itemRequest.getNomeProduto())
+                .quantidade(itemRequest.getQuantidade())
+                .precoUnitario(itemRequest.getPrecoUnitario())
+                .lote(lote)
+                .controlado(itemRequest.isControlado())
+                .build();
+    }
+}
