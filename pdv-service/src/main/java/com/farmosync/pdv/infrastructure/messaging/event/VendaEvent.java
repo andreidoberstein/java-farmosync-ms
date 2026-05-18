@@ -18,4 +18,5 @@ public class VendaEvent {
     private BigDecimal valorTotal;
     private LocalDateTime dataCriacao;
     private List<ItemEvent> itens;
+    private ReceitaEvent receita;
 }

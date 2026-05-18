@@ -17,4 +17,6 @@ public class RegistrarVendaRequest {
     @NotEmpty
     @Valid
     private List<ItemRequest> itens;
+    @Valid
+    private ReceitaRequest receita;
 }

@@ -3,6 +3,7 @@ package com.farmosync.pdv.infrastructure.messaging;
 import com.farmosync.pdv.application.ports.VendaEventPublisher;
 import com.farmosync.pdv.domain.model.Venda;
 import com.farmosync.pdv.infrastructure.messaging.event.ItemEvent;
+import com.farmosync.pdv.infrastructure.messaging.event.ReceitaEvent;
 import com.farmosync.pdv.infrastructure.messaging.event.VendaEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -30,12 +31,24 @@ public class KafkaVendaEventPublisher implements VendaEventPublisher {
                         .build())
                 .collect(Collectors.toList());
 
+        ReceitaEvent receitaEvent = null;
+        if (venda.getReceita() != null) {
+            receitaEvent = ReceitaEvent.builder()
+                    .crmMedico(venda.getReceita().getCrmMedico())
+                    .crmUf(venda.getReceita().getCrmUf())
+                    .nomeMedico(venda.getReceita().getNomeMedico())
+                    .dataEmissao(venda.getReceita().getDataEmissao())
+                    .assinaturaDigital(venda.getReceita().getAssinaturaDigital())
+                    .build();
+        }
+
         VendaEvent event = VendaEvent.builder()
                 .vendaId(venda.getId())
                 .cpfCliente(venda.getCpfCliente())
                 .valorTotal(venda.getValorTotal())
                 .dataCriacao(venda.getDataCriacao())
                 .itens(itemEvents)
+                .receita(receitaEvent)
                 .build();
 
         kafkaTemplate.send(TOPIC, venda.getId(), event);

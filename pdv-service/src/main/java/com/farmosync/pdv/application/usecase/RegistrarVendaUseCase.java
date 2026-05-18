@@ -6,6 +6,7 @@ import com.farmosync.pdv.application.dto.VendaResponse;
 import com.farmosync.pdv.application.ports.VendaEventPublisher;
 import com.farmosync.pdv.domain.model.ItemVenda;
 import com.farmosync.pdv.domain.model.Lote;
+import com.farmosync.pdv.domain.model.Receita;
 import com.farmosync.pdv.domain.model.Venda;
 import com.farmosync.pdv.domain.model.VendaStatus;
 import com.farmosync.pdv.domain.repository.VendaRepository;
@@ -27,12 +28,24 @@ public class RegistrarVendaUseCase {
                 .map(this::mapToDomainItem)
                 .collect(Collectors.toList());
 
+        Receita domainReceita = null;
+        if (request.getReceita() != null) {
+            domainReceita = Receita.builder()
+                    .crmMedico(request.getReceita().getCrmMedico())
+                    .crmUf(request.getReceita().getCrmUf())
+                    .nomeMedico(request.getReceita().getNomeMedico())
+                    .dataEmissao(request.getReceita().getDataEmissao())
+                    .assinaturaDigital(request.getReceita().getAssinaturaDigital())
+                    .build();
+        }
+
         Venda venda = Venda.builder()
                 .id(UUID.randomUUID().toString())
                 .cpfCliente(request.getCpfCliente())
                 .itens(domainItens)
                 .status(VendaStatus.PENDENTE)
                 .dataCriacao(LocalDateTime.now())
+                .receita(domainReceita)
                 .build();
 
         venda.calcularValorTotal();

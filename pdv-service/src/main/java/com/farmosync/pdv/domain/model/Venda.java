@@ -23,6 +23,7 @@ public class Venda {
     private BigDecimal valorTotal;
     private VendaStatus status;
     private LocalDateTime dataCriacao;
+    private Receita receita;
 
     public void calcularValorTotal() {
         if (itens == null || itens.isEmpty()) {
