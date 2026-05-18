@@ -96,28 +96,28 @@ public class ValidarReceitaConsumerIT {
         assertEquals("APROVADA", auditoria.getStatus());
         assertNull(auditoria.getMotivoRejeicao());
 
-        Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-prescription-approved");
-        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        Properties approvedProperties = new Properties();
+        approvedProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
+        approvedProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        approvedProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        approvedProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-prescription-approved");
+        approvedProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties)) {
-            consumer.subscribe(Collections.singletonList("receita-validada-topic"));
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
+        try (KafkaConsumer<String, String> approvedConsumer = new KafkaConsumer<>(approvedProperties)) {
+            approvedConsumer.subscribe(Collections.singletonList("receita-validada-topic"));
+            ConsumerRecords<String, String> approvedRecords = approvedConsumer.poll(Duration.ofSeconds(10));
             
-            ConsumerRecord<String, String> targetRecord = null;
-            for (ConsumerRecord<String, String> record : records) {
-                if (vendaId.equals(record.key())) {
-                    targetRecord = record;
+            ConsumerRecord<String, String> approvedTargetRecord = null;
+            for (ConsumerRecord<String, String> polledRecord : approvedRecords) {
+                if (vendaId.equals(polledRecord.key())) {
+                    approvedTargetRecord = polledRecord;
                     break;
                 }
             }
             
-            assertNotNull(targetRecord);
-            assertTrue(targetRecord.value().contains("APROVADA"));
-            assertTrue(targetRecord.value().contains("Amoxicilina"));
+            assertNotNull(approvedTargetRecord);
+            assertTrue(approvedTargetRecord.value().contains("APROVADA"));
+            assertTrue(approvedTargetRecord.value().contains("Amoxicilina"));
         }
     }
 
@@ -162,28 +162,28 @@ public class ValidarReceitaConsumerIT {
         assertNotNull(auditoria.getMotivoRejeicao());
         assertTrue(auditoria.getMotivoRejeicao().contains("expirada"));
 
-        Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-prescription-rejected");
-        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        Properties rejectedProperties = new Properties();
+        rejectedProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
+        rejectedProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        rejectedProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        rejectedProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-prescription-rejected");
+        rejectedProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties)) {
-            consumer.subscribe(Collections.singletonList("receita-validada-topic"));
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
+        try (KafkaConsumer<String, String> rejectedConsumer = new KafkaConsumer<>(rejectedProperties)) {
+            rejectedConsumer.subscribe(Collections.singletonList("receita-validada-topic"));
+            ConsumerRecords<String, String> rejectedRecords = rejectedConsumer.poll(Duration.ofSeconds(10));
             
-            ConsumerRecord<String, String> targetRecord = null;
-            for (ConsumerRecord<String, String> record : records) {
-                if (vendaId.equals(record.key())) {
-                    targetRecord = record;
+            ConsumerRecord<String, String> rejectedTargetRecord = null;
+            for (ConsumerRecord<String, String> polledRecord : rejectedRecords) {
+                if (vendaId.equals(polledRecord.key())) {
+                    rejectedTargetRecord = polledRecord;
                     break;
                 }
             }
             
-            assertNotNull(targetRecord);
-            assertTrue(targetRecord.value().contains("REJEITADA"));
-            assertTrue(targetRecord.value().contains("expirada"));
+            assertNotNull(rejectedTargetRecord);
+            assertTrue(rejectedTargetRecord.value().contains("REJEITADA"));
+            assertTrue(rejectedTargetRecord.value().contains("expirada"));
         }
     }
 }
