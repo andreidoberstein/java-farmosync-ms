@@ -7,9 +7,13 @@ import com.farmosync.inventory.infrastructure.messaging.event.EstoqueAtualizadoE
 import com.farmosync.inventory.infrastructure.messaging.event.ItemEstoqueAtualizadoEvent;
 import com.farmosync.inventory.infrastructure.messaging.event.ItemVendaEmitidoEvent;
 import com.farmosync.inventory.infrastructure.messaging.event.ReceitaValidadaEvent;
+import com.farmosync.inventory.infrastructure.repository.document.IdempotenceKeyDocument;
+import com.farmosync.inventory.infrastructure.repository.mongo.MongoIdempotenceKeyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,8 +24,18 @@ public class BaixarEstoqueUseCase {
 
     private final ProdutoEstoqueRepository repository;
     private final EstoqueAtualizadoEventPublisher publisher;
+    private final MongoIdempotenceKeyRepository idempotenceRepository;
 
     public void processarBaixaEstoque(ReceitaValidadaEvent event) {
+        try {
+            idempotenceRepository.save(IdempotenceKeyDocument.builder()
+                    .id(event.getVendaId())
+                    .dataProcessamento(LocalDateTime.now())
+                    .build());
+        } catch (DuplicateKeyException e) {
+            return;
+        }
+
         List<ItemEstoqueAtualizadoEvent> mappedItens = event.getItens() != null ? event.getItens().stream()
                 .map(i -> ItemEstoqueAtualizadoEvent.builder()
                         .produtoId(i.getProdutoId())
