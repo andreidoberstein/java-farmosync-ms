@@ -213,3 +213,12 @@ Para mais detalhes sobre as decisões fundamentais tomadas durante o ciclo de vi
 *   **[ADR 003: Observabilidade e Instrumentação de Métricas com Actuator e Prometheus](decisions/0003-prometheus-actuator-monitoring.md)** - Visão operacional de métricas JVM, pool do MongoDB, latências HTTP e monitoramento de *consumer lag* do Kafka.
 *   **[ADR 004: Boas Práticas de Logging Estruturado e Resiliente nos Microsserviços](decisions/0004-logging-best-practices.md)** - Registro sobre injeção do SLF4J, tratamento transparente de exceções críticas e acoplamento com coleta de logs centralizada no Grafana Loki.
 *   **[ADR 005: Estratégia de Segurança Corporativa, Autenticação JWT e Proteção de Mensageria](decisions/0005-microservices-security-strategy.md)** - Visão holística sobre o API Gateway, autenticação federada com Keycloak, autorização por role (RBAC), mTLS e endurecimento do Kafka e MongoDB.
+
+---
+
+## 10. Relatórios de Pesquisa e Viabilidade Técnica
+
+Para guiar as inovações tecnológicas e a adoção de novos padrões na arquitetura FarmoSync:
+
+*   **[Pesquisa de Viabilidade Técnica: Model Context Protocol (MCP) no FarmoSync](research/model-context-protocol-viability.md)** - Análise aprofundada da utilização do protocolo aberto de contexto de modelos de IA (MCP) para automação de tarefas sanitárias, monitoramento de filas e integração com executores de deploy em nuvem.
+
