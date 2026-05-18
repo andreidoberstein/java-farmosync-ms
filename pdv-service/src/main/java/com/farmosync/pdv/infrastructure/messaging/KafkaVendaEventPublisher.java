@@ -1,21 +1,25 @@
 package com.farmosync.pdv.infrastructure.messaging;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.farmosync.pdv.application.ports.VendaEventPublisher;
 import com.farmosync.pdv.domain.model.Venda;
 import com.farmosync.pdv.infrastructure.messaging.event.ItemEvent;
 import com.farmosync.pdv.infrastructure.messaging.event.ReceitaEvent;
 import com.farmosync.pdv.infrastructure.messaging.event.VendaEvent;
+import com.farmosync.pdv.infrastructure.repository.document.OutboxEventDocument;
+import com.farmosync.pdv.infrastructure.repository.mongo.MongoOutboxEventRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class KafkaVendaEventPublisher implements VendaEventPublisher {
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-    private static final String TOPIC = "venda-emitida-topic";
+    private final MongoOutboxEventRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void publicarVendaEmitida(Venda venda) {
@@ -51,6 +55,20 @@ public class KafkaVendaEventPublisher implements VendaEventPublisher {
                 .receita(receitaEvent)
                 .build();
 
-        kafkaTemplate.send(TOPIC, venda.getId(), event);
+        try {
+            String payload = objectMapper.writeValueAsString(event);
+            OutboxEventDocument outboxEvent = OutboxEventDocument.builder()
+                    .id(UUID.randomUUID().toString())
+                    .aggregateType("Venda")
+                    .aggregateId(venda.getId())
+                    .eventType("VendaEmitidaEvent")
+                    .payload(payload)
+                    .status("PENDING")
+                    .dataCriacao(LocalDateTime.now())
+                    .build();
+            outboxRepository.save(outboxEvent);
+        } catch (Exception e) {
+            throw new RuntimeException("Falha ao salvar evento no Outbox", e);
+        }
     }
 }
