@@ -2,6 +2,8 @@ server:
   port: 8082
 
 spring:
+  application:
+    name: prescription-service
   data:
     mongodb:
       uri: mongodb://localhost:27017/farmosync_prescription
@@ -17,3 +19,12 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
