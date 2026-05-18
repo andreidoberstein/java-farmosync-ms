@@ -12,6 +12,7 @@ import com.farmosync.pdv.domain.model.VendaStatus;
 import com.farmosync.pdv.domain.repository.VendaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,7 @@ public class RegistrarVendaUseCase {
     private final VendaRepository vendaRepository;
     private final VendaEventPublisher vendaEventPublisher;
 
+    @Transactional
     public VendaResponse executar(RegistrarVendaRequest request) {
         List<ItemVenda> domainItens = request.getItens().stream()
                 .map(this::mapToDomainItem)

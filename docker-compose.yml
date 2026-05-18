@@ -6,12 +6,22 @@ services:
     container_name: farmosync-mongodb
     ports:
       - "27017:27017"
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     environment:
       # MONGO_INITDB_ROOT_USERNAME: admin
       # MONGO_INITDB_ROOT_PASSWORD: adminpassword
       MONGO_INITDB_DATABASE: farmosync
     volumes:
       - mongo_data:/data/db
+    networks:
+      - farmosync-network
+
+  mongodb-init:
+    image: mongo:6.0
+    container_name: farmosync-mongodb-init
+    depends_on:
+      - mongodb
+    entrypoint: [ "mongosh", "--host", "mongodb:27017", "--eval", "try { rs.status().ok } catch (err) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}) }" ]
     networks:
       - farmosync-network
 
