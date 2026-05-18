@@ -221,6 +221,6 @@ Para mais detalhes sobre as decisões fundamentais tomadas durante o ciclo de vi
 Para guiar as inovações tecnológicas e a adoção de novos padrões na arquitetura FarmoSync:
 
 *   **[Pesquisa de Viabilidade Técnica: Model Context Protocol (MCP) no FarmoSync](research/model-context-protocol-viability.md)** - Análise aprofundada da utilização do protocolo aberto de contexto de modelos de IA (MCP) para automação de tarefas sanitárias, monitoramento de filas e integração com executores de deploy em nuvem.
-*   **[Guia de Integração e Deploy em Produção (Nuvem)](deployment-guide.md)** - Manual passo a passo completo detalhando a configuração do MongoDB Atlas, Upstash Kafka, contêineres Java no Render e React na Vercel.
+*   **[Guia de Integração e Deploy em Produção (Nuvem)](deployment-guide.md)** - Manual passo a passo completo detalhando a configuração do MongoDB Atlas, Confluent Cloud Kafka, contêineres Java no Render e React na Vercel.
 
 

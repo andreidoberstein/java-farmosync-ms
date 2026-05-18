@@ -10,7 +10,7 @@ Este guia orienta o engenheiro de software no passo a passo para migrar o ecossi
 graph TD
     A[Cliente / Navegador] -->|HTTPS| B[Vercel: React Frontend]
     B -->|REST API| C[Render / Fly.io: pdv-service]
-    C <-->|Fila Assíncrona SASL/SSL| D[Upstash: Serverless Kafka]
+    C <-->|Fila Assíncrona SASL/SSL| D[Confluent Cloud: Serverless Kafka]
     E[Render: prescription-service] <-->|Fila Assíncrona| D
     F[Render: inventory-service] <-->|Fila Assíncrona| D
     C <-->|Persistência ReplicaSet| G[MongoDB Atlas: Shared M0]
@@ -44,28 +44,31 @@ O MongoDB no ambiente de produção deve rodar como um **Replica Set** ativo (ne
 
 ---
 
-## PARTE 2: Deploy da Mensageria (Upstash Serverless Kafka)
+## PARTE 2: Deploy da Mensageria (Confluent Cloud Serverless Kafka)
 
-Como subir o Apache Kafka na nuvem gratuitamente de forma ultra-veloz usando o **Upstash** (mensageria sem servidor sob demanda).
+Como criar um cluster Kafka serverless na nuvem de forma gratuita utilizando os **$400 em créditos gratuitos de início rápido** fornecidos pelo **Confluent Cloud** (o padrão ouro da indústria criado pelos fundadores do próprio Apache Kafka).
 
 ### 1. Criar o Cluster Kafka
-1. Acesse [upstash.com](https://upstash.com) e crie uma conta.
-2. No painel, clique na aba **Kafka** -> **Create Cluster**.
-3. Nomeie como `farmosync-kafka` e selecione a região mais próxima (ex: `us-east-1` ou `sa-east-1`).
-4. Clique em **Create**.
+1. Acesse [confluent.cloud](https://confluent.cloud) e crie uma conta gratuita.
+2. No painel inicial, clique em **Create Cluster**.
+3. Escolha o tipo de cluster **Basic** (que opera de forma serverless e é elegível para os créditos gratuitos de $400 USD).
+4. Selecione o provedor de nuvem (ex: AWS, Google Cloud ou Azure) e a região mais próxima de você.
+5. Clique em **Launch Cluster**.
 
 ### 2. Criar os Tópicos Necessários
-Crie manualmente (ou habilite a auto-criação) os tópicos nos quais nossos microsserviços se comunicam:
-*   `venda-emitida`
-*   `receita-validada`
-*   `estoque-baixado`
-*   `vendas-erro-dlq`
+No painel lateral esquerdo do seu cluster Confluent Cloud:
+1. Vá em **Topics** -> **Create Topic**.
+2. Crie os tópicos nos quais nossos microsserviços se comunicam:
+   *   `venda-emitida`
+   *   `receita-validada`
+   *   `estoque-baixado`
+   *   `vendas-erro-dlq`
 
-### 3. Coletar Credenciais de Conexão
-Na aba **Details** do cluster no Upstash, vá em **Spring Boot** ou **Kafka Clients** e copie os parâmetros:
-*   **Bootstrap Server:** `xxxx-us-east-1.upstash.io:9092`
-*   **SASL Username:** Código de usuário fornecido.
-*   **SASL Password:** Token fornecido.
+### 3. Criar a API Key e Coletar as Credenciais
+1. Vá em **API Keys** -> **Add Key**.
+2. Selecione a permissão **Global Access** (ou configure as permissões específicas do cluster).
+3. Salve a sua **API Key** (que funcionará como o `username`) e o seu **API Secret** (que funcionará como o `password`).
+4. Na aba **Cluster Settings**, copie o endereço do **Bootstrap Server** (terá o formato `pkc-xxxx.us-east-1.aws.confluent.cloud:9092`).
 
 ---
 
@@ -110,10 +113,10 @@ No painel de cada serviço no Render, vá em **Environment** e configure as segu
 | Chave da Variável | Valor (Origem) |
 | :--- | :--- |
 | `SPRING_DATA_MONGODB_URI` | *Connection String do MongoDB Atlas (Parte 1)* |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | *Bootstrap Server do Upstash (Parte 2)* |
+| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | *Bootstrap Server do Confluent Cloud (Parte 2)* |
 | `SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL` | `SASL_SSL` |
 | `SPRING_KAFKA_PROPERTIES_SASL_MECHANISM` | `PLAIN` |
-| `SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG` | `org.apache.kafka.common.security.plain.PlainLoginModule required username="USER" password="PASSWORD";` *(Substituindo pelas credenciais do Upstash)* |
+| `SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG` | `org.apache.kafka.common.security.plain.PlainLoginModule required username="SUA_API_KEY" password="SEU_API_SECRET";` *(Substituindo pelas credenciais do Confluent Cloud)* |
 
 ---
 
@@ -144,6 +147,6 @@ No painel do projeto do Vercel, vá em **Settings** -> **Environment Variables**
 
 ## Checklist de Sucesso de Homologação em Nuvem
 * [ ] Banco MongoDB Atlas ativo com Replica Set pronto.
-* [ ] Tópicos criados no Kafka do Upstash.
+* [ ] Tópicos criados no Kafka do Confluent Cloud.
 * [ ] Microsserviços compilados em contêineres Docker e rodando no Render com 0 logs de erro.
 * [ ] Frontend React acessível via HTTPS na Vercel efetuando requisições contra o IP público do `pdv-service`.
