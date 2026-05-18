@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.farmosync.pdv.presentation.RegistrarVendaControllerIT
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 53.55 s -- in com.farmosync.pdv.presentation.RegistrarVendaControllerIT

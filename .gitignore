@@ -1,0 +1,34 @@
+# Maven Build Output
+target/
+**/target/
+
+# IDE and Editor Files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.settings/
+.classpath
+.project
+.factorypath
+
+# Compiled Java Classes
+*.class
+
+# Package Files
+*.war
+*.sar
+*.ear
+*.aar
+*.jar
+
+# Logs
+*.log
+logs/
+
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
