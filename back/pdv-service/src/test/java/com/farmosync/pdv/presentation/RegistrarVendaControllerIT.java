@@ -49,6 +49,9 @@ public class RegistrarVendaControllerIT {
     @Autowired
     private MongoVendaRepository mongoVendaRepository;
 
+    @Autowired
+    private org.springframework.kafka.core.KafkaTemplate<String, Object> kafkaTemplate;
+
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
@@ -101,5 +104,70 @@ public class RegistrarVendaControllerIT {
             assertTrue(record.value().contains("PROD1"));
             assertTrue(record.value().contains("Amoxicilina"));
         }
+    }
+
+    @Test
+    public void deveFinalizarVendaAoReceberEstoqueAtualizadoComSucesso() throws InterruptedException {
+        VendaDocument venda = VendaDocument.builder()
+                .id("VENDA-SAGA-OK")
+                .cpfCliente("12345678909")
+                .valorTotal(new BigDecimal("100.00"))
+                .status("PENDENTE")
+                .dataCriacao(java.time.LocalDateTime.now())
+                .build();
+        mongoVendaRepository.save(venda);
+
+        com.farmosync.pdv.infrastructure.messaging.event.EstoqueAtualizadoEvent event =
+                com.farmosync.pdv.infrastructure.messaging.event.EstoqueAtualizadoEvent.builder()
+                        .vendaId("VENDA-SAGA-OK")
+                        .status("SUCESSO")
+                        .build();
+
+        kafkaTemplate.send("estoque-atualizado-topic", "VENDA-SAGA-OK", event);
+
+        boolean processou = false;
+        for (int i = 0; i < 30; i++) {
+            VendaDocument updated = mongoVendaRepository.findById("VENDA-SAGA-OK").orElseThrow();
+            if ("PROCESSADA".equals(updated.getStatus())) {
+                processou = true;
+                break;
+            }
+            Thread.sleep(200);
+        }
+
+        assertTrue(processou, "A venda deveria ter sido atualizada para PROCESSADA");
+    }
+
+    @Test
+    public void deveRejeitarVendaAoReceberEstoqueAtualizadoComErro() throws InterruptedException {
+        VendaDocument venda = VendaDocument.builder()
+                .id("VENDA-SAGA-ERRO")
+                .cpfCliente("12345678909")
+                .valorTotal(new BigDecimal("100.00"))
+                .status("PENDENTE")
+                .dataCriacao(java.time.LocalDateTime.now())
+                .build();
+        mongoVendaRepository.save(venda);
+
+        com.farmosync.pdv.infrastructure.messaging.event.EstoqueAtualizadoEvent event =
+                com.farmosync.pdv.infrastructure.messaging.event.EstoqueAtualizadoEvent.builder()
+                        .vendaId("VENDA-SAGA-ERRO")
+                        .status("ERRO")
+                        .motivoRejeicao("Estoque insuficiente")
+                        .build();
+
+        kafkaTemplate.send("estoque-atualizado-topic", "VENDA-SAGA-ERRO", event);
+
+        boolean processou = false;
+        for (int i = 0; i < 30; i++) {
+            VendaDocument updated = mongoVendaRepository.findById("VENDA-SAGA-ERRO").orElseThrow();
+            if ("REJEITADA".equals(updated.getStatus())) {
+                processou = true;
+                break;
+            }
+            Thread.sleep(200);
+        }
+
+        assertTrue(processou, "A venda deveria ter sido atualizada para REJEITADA");
     }
 }
