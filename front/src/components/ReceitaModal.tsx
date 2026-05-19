@@ -26,6 +26,10 @@ export function ReceitaModal({
 }: ReceitaModalProps) {
   if (!showReceitaModal) return null;
 
+  const formatarCrm = (value: string): string => {
+    return value.replace(/\D/g, '').slice(0, 8)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-6">
@@ -61,7 +65,8 @@ export function ReceitaModal({
                 type="text"
                 placeholder="12345 (Digite 99999 p/ falha)"
                 value={crm}
-                onChange={(e) => setCrm(e.target.value)}
+                onChange={(e) => setCrm(formatarCrm(e.target.value))}
+                maxLength={8}
                 className="w-full bg-slate-950 border border-slate-850 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
                 required
               />

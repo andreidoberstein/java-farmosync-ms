@@ -37,6 +37,14 @@ export function VendaForm({
 }: VendaFormProps) {
   const total = cart.reduce((acc, item) => acc + (item.produto.preco * item.quantidade), 0)
 
+  const formatarCpf = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 11)
+    return digits
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -135,7 +143,8 @@ export function VendaForm({
               type="text"
               placeholder="000.000.000-00"
               value={cpf}
-              onChange={(e) => setCpf(e.target.value)}
+              onChange={(e) => setCpf(formatarCpf(e.target.value))}
+              maxLength={14}
               className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-650 focus:outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
