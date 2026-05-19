@@ -6,11 +6,14 @@ import com.farmosync.pdv.infrastructure.repository.document.OutboxEventDocument;
 import com.farmosync.pdv.infrastructure.repository.mongo.MongoOutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -24,13 +27,14 @@ public class OutboxEventScheduler {
 
     @Scheduled(fixedDelay = 1000)
     public void processarEventosOutbox() {
-        List<OutboxEventDocument> eventosPendentes = outboxRepository.findByStatusOrderByDataCriacaoAsc("PENDING");
+        PageRequest pageRequest = PageRequest.of(0, 100, Sort.by("dataCriacao").ascending());
+        List<OutboxEventDocument> eventosPendentes = outboxRepository.findByStatus("PENDING", pageRequest);
 
         for (OutboxEventDocument evento : eventosPendentes) {
             try {
                 VendaEvent vendaEvent = objectMapper.readValue(evento.getPayload(), VendaEvent.class);
                 log.debug("Enviando evento do outbox ID: {} para o Kafka no topico: {}.", evento.getId(), TOPIC);
-                kafkaTemplate.send(TOPIC, evento.getAggregateId(), vendaEvent).get();
+                kafkaTemplate.send(TOPIC, evento.getAggregateId(), vendaEvent).get(5, TimeUnit.SECONDS);
 
                 evento.setStatus("PROCESSED");
                 evento.setDataProcessamento(LocalDateTime.now());
