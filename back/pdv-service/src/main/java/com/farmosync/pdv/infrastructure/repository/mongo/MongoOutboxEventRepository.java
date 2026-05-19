@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface MongoOutboxEventRepository extends MongoRepository<OutboxEventDocument, String> {
     List<OutboxEventDocument> findByStatus(String status, Pageable pageable);
+    long countByStatus(String status);
 }

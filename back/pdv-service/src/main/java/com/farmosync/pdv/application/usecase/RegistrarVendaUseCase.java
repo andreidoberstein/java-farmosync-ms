@@ -19,10 +19,21 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class RegistrarVendaUseCase {
     private final VendaRepository vendaRepository;
     private final VendaEventPublisher vendaEventPublisher;
+    private final io.micrometer.core.instrument.Counter vendasCounter;
+
+    public RegistrarVendaUseCase(
+            VendaRepository vendaRepository,
+            VendaEventPublisher vendaEventPublisher,
+            io.micrometer.core.instrument.MeterRegistry meterRegistry) {
+        this.vendaRepository = vendaRepository;
+        this.vendaEventPublisher = vendaEventPublisher;
+        this.vendasCounter = io.micrometer.core.instrument.Counter.builder("farmosync.vendas.total")
+                .description("Total de vendas registradas no PDV")
+                .register(meterRegistry);
+    }
 
     @Transactional
     public VendaResponse executar(RegistrarVendaRequest request) {
@@ -54,6 +65,7 @@ public class RegistrarVendaUseCase {
 
         String eventPayload = vendaEventPublisher.obterPayloadVendaEmitida(venda);
         Venda savedVenda = vendaRepository.salvarComEvento(venda, eventPayload);
+        vendasCounter.increment();
 
         return VendaResponse.builder()
                 .id(savedVenda.getId())
