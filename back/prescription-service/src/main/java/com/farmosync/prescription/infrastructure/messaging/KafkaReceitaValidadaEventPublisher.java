@@ -4,16 +4,24 @@ import com.farmosync.prescription.application.command.ReceitaValidadaDto;
 import com.farmosync.prescription.application.ports.ReceitaValidadaEventPublisher;
 import com.farmosync.prescription.infrastructure.messaging.event.ItemVendaEmitidoEvent;
 import com.farmosync.prescription.infrastructure.messaging.event.ReceitaValidadaEvent;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class KafkaReceitaValidadaEventPublisher implements ReceitaValidadaEventPublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private static final String TOPIC = "receita-validada-topic";
+    private final String topic;
+
+    public KafkaReceitaValidadaEventPublisher(
+            KafkaTemplate<String, Object> kafkaTemplate,
+            @Value("${app.kafka.topics.receita-validada}") String topic) {
+        this.kafkaTemplate = kafkaTemplate;
+        this.topic = topic;
+    }
+
 
     @Override
     public void publicarReceitaValidada(ReceitaValidadaDto resultado) {
@@ -35,6 +43,6 @@ public class KafkaReceitaValidadaEventPublisher implements ReceitaValidadaEventP
                         .collect(Collectors.toList()) : null)
                 .build();
 
-        kafkaTemplate.send(TOPIC, event.getVendaId(), event);
+        kafkaTemplate.send(topic, event.getVendaId(), event);
     }
 }

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.farmosync.pdv.infrastructure.messaging.event.VendaEvent;
 import com.farmosync.pdv.infrastructure.repository.document.OutboxEventDocument;
 import com.farmosync.pdv.infrastructure.repository.mongo.MongoOutboxEventRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -16,14 +16,25 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class OutboxEventScheduler {
 
     private final MongoOutboxEventRepository outboxRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private static final String TOPIC = "venda-emitida-topic";
+    private final String topic;
+
+    public OutboxEventScheduler(
+            MongoOutboxEventRepository outboxRepository,
+            KafkaTemplate<String, Object> kafkaTemplate,
+            ObjectMapper objectMapper,
+            @Value("${app.kafka.topics.venda-emitida}") String topic) {
+        this.outboxRepository = outboxRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+        this.topic = topic;
+    }
+
 
     @Scheduled(fixedDelay = 1000)
     public void processarEventosOutbox() {
@@ -33,8 +44,8 @@ public class OutboxEventScheduler {
         for (OutboxEventDocument evento : eventosPendentes) {
             try {
                 VendaEvent vendaEvent = objectMapper.readValue(evento.getPayload(), VendaEvent.class);
-                log.debug("Enviando evento do outbox ID: {} para o Kafka no topico: {}.", evento.getId(), TOPIC);
-                kafkaTemplate.send(TOPIC, evento.getAggregateId(), vendaEvent).get(5, TimeUnit.SECONDS);
+                log.debug("Enviando evento do outbox ID: {} para o Kafka no topico: {}.", evento.getId(), topic);
+                kafkaTemplate.send(topic, evento.getAggregateId(), vendaEvent).get(5, TimeUnit.SECONDS);
 
                 evento.setStatus("PROCESSED");
                 evento.setDataProcessamento(LocalDateTime.now());

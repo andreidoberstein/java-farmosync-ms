@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class KafkaVendaEmitidaConsumer {
     private final ValidarReceitaUseCase useCase;
 
-    @KafkaListener(topics = "venda-emitida-topic", groupId = "prescription-group")
+    @KafkaListener(topics = "${app.kafka.topics.venda-emitida}", groupId = "prescription-group")
     public void consumir(VendaEmitidaEvent event) {
         log.info("Consumido evento de venda emitida do Kafka para a Venda ID: {}.", event.getVendaId());
         try {

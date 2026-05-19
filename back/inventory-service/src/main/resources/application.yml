@@ -28,3 +28,10 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+app:
+  kafka:
+    topics:
+      receita-validada: "receita-validada-topic"
+      estoque-atualizado: "estoque-atualizado-topic"
+

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class ReceitaValidadaConsumer {
     private final BaixarEstoqueUseCase useCase;
 
-    @KafkaListener(topics = "receita-validada-topic", groupId = "inventory-group")
+    @KafkaListener(topics = "${app.kafka.topics.receita-validada}", groupId = "inventory-group")
     public void consumir(ReceitaValidadaEvent event) {
         log.info("Consumido evento de receita validada do Kafka para a Venda ID: {}. Status da receita: {}.", 
                 event.getVendaId(), event.getStatus());
