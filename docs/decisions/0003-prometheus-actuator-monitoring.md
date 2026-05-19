@@ -19,6 +19,11 @@ Decidimos implementar a coleta padronizada de métricas e exposição de saúde 
 2. **Exposição Controlada de Endpoints:** Configuração de todos os arquivos `application.yml` dos microsserviços para liberar os endpoints de monitoramento através do parâmetro `management.endpoints.web.exposure.include: health, info, prometheus`.
 3. **Identificação Uniforme:** Inclusão de uma tag corporativa unificada chamada `application` associando o respectivo nome de cada serviço (`${spring.application.name}`) a todas as métricas geradas, garantindo indexação e filtragem rápida no Prometheus e Grafana.
 4. **Coleta de Métricas Críticas:** O Prometheus raspa automaticamente o endpoint `/actuator/prometheus` (rodando nas portas `8081`, `8082` e `8083` de cada microsserviço) para coletar dados do Garbage Collector, consumo de heap/non-heap JVM, lag do consumidor Kafka, throughput de envio de mensagens do Kafka Producer, conexões ativas no pool do MongoDB e percentis de latência HTTP das APIs REST.
+5. **Métricas de Negócio Customizadas (Micrometer):** Instrumentamos o código do `pdv-service` para expor indicadores críticos de desempenho e consistência de negócios:
+   - `farmosync.outbox.pending.count` (Gauge) — Contagem instantânea de eventos pendentes no Outbox.
+   - `farmosync.outbox.processing.duration` (Timer) — Duração e frequência do processamento do Outbox.
+   - `farmosync.vendas.total` (Counter) — Volume acumulado de vendas registradas no PDV.
+   - `farmosync.estoque.baixas.erros` (Counter) — Volume de erros de baixa no estoque recebidos via saga compensatória.
 
 ## Consequências
 

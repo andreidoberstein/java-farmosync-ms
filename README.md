@@ -98,7 +98,7 @@ java-ms/
 │   ├── package.json                  # Dependências npm (Vite, Tailwind, Framer Motion)
 │   └── vercel.json                   # Configuração de rotas SPA da Vercel
 ├── docs/                             # Documentação Técnica e Arquitetural
-│   ├── decisions/                    # Decisões Arquiteturais Registradas (ADRs 001 a 005)
+│   ├── decisions/                    # Decisões Arquiteturais Registradas (ADRs 001 a 007)
 │   ├── architecture.md               # Índice e Blueprint Arquitetural Global
 │   └── deployment-guide.md           # Guia Passo a Passo de Deploy em Nuvem (Confluent/Render)
 ├── docker-compose.yml                # Docker Compose de Infraestrutura Local (Mongo + Kafka + Kafdrop)
@@ -141,20 +141,26 @@ npm run dev
 ---
 
 ### Passo 3: Executar os Microsserviços Backend (Java + Spring Boot)
-Cada um dos microsserviços na pasta `back/` pode ser executado individualmente via Maven ou importado como projeto em sua IDE (IntelliJ IDEA, Eclipse, VS Code):
+
+O backend está estruturado como um projeto **Maven Multi-Módulo**. Você pode compilar e rodar testes de integração (IT) de todos os serviços de forma unificada a partir da raiz do diretório `back/` usando o Maven Reactor:
+
+```bash
+# Compilar e testar todo o ecossistema unificado
+cd back
+mvn clean verify
+```
+
+Se desejar executar cada um dos microsserviços individualmente a partir da raiz do diretório `back/`, você pode utilizar os parâmetros `-pl` do Maven:
 
 ```bash
 # Executando o PDV Service (Porta 8081)
-cd back/pdv-service
-mvn spring-boot:run
+mvn spring-boot:run -pl pdv-service
 
 # Executando o Prescription Service (Consumidor Assíncrono do Kafka)
-cd back/prescription-service
-mvn spring-boot:run
+mvn spring-boot:run -pl prescription-service
 
 # Executando o Inventory Service (Consumidor Assíncrono do Kafka)
-cd back/inventory-service
-mvn spring-boot:run
+mvn spring-boot:run -pl inventory-service
 ```
 
 ---
@@ -165,13 +171,14 @@ A evolução técnica e arquitetural do FarmoSync está ricamente catalogada nas
 
 *   📖 **[Blueprint Arquitetural Completo](docs/architecture.md):** Detalhamento sobre o desenho de microsserviços, DDD, Clean Architecture e padrões de resiliência corporativos.
 *   ☁️ **[Guia de Deploy em Produção (Nuvem)](docs/deployment-guide.md):** Passo a passo completo para configurar o MongoDB Atlas, o Confluent Cloud Kafka, hospedar os microsserviços Java no Render e o React na Vercel.
-*   🤖 **[Pesquisa de Viabilidade do Model Context Protocol (MCP)](docs/research/model-context-protocol-viability.md):** Estudo aprofundado sobre a aplicação do protocolo aberto da Anthropic para guiar agentes inteligentes na auditoria do banco de dados, monitoramento do Kafka e automação de deploys.
 *   🏛️ **Catálogo de Decisões de Arquitetura (ADRs):**
     *   **[ADR 001 - Padrão de Mensageria com Kafka DLQ](docs/decisions/0001-kafka-dead-letter-queue.md)**
     *   **[ADR 002 - Consistência Atômica com Transactional Outbox no MongoDB](docs/decisions/0002-transactional-outbox-mongodb.md)**
     *   **[ADR 003 - Observabilidade de Métricas com Prometheus e Actuator](docs/decisions/0003-prometheus-actuator-monitoring.md)**
     *   **[ADR 004 - Boas Práticas de Logging Estruturado](docs/decisions/0004-logging-best-practices.md)**
     *   **[ADR 005 - Segurança Corporativa, mTLS e Autenticação JWT com Keycloak](docs/decisions/0005-microservices-security-strategy.md)**
+    *   **[ADR 006 - Coreografia de Saga Compensatória para Resolução e Rejeição de Vendas](docs/decisions/0006-compensating-saga-pattern.md)**
+    *   **[ADR 007 - Estruturação de Build com Maven Multi-Módulo e Parent POM](docs/decisions/0007-maven-multi-module-parent-pom.md)**
 
 ---
 Developed with 💻 & ☕ by Andrei Doberstein.
