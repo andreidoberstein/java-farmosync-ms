@@ -4,14 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,6 +31,14 @@ public class Venda {
         this.valorTotal = itens.stream()
                 .map(ItemVenda::getValorItem)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public void adicionarItem(ItemVenda item) {
+        if (this.itens == null) {
+            this.itens = new ArrayList<>();
+        }
+        this.itens.add(item);
+        this.calcularValorTotal();
     }
 
     public void finalizar() {

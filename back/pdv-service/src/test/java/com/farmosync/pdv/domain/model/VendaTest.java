@@ -69,4 +69,21 @@ public class VendaTest {
 
         assertEquals(VendaStatus.REJEITADA, venda.getStatus());
     }
+
+    @Test
+    public void deveAdicionarItemERecalcularTotal() {
+        Venda venda = Venda.builder().build();
+        ItemVenda item = ItemVenda.builder()
+                .produtoId("P1")
+                .nomeProduto("Dipirona")
+                .quantidade(2)
+                .precoUnitario(new BigDecimal("10.00"))
+                .controlado(false)
+                .build();
+
+        venda.adicionarItem(item);
+
+        assertEquals(1, venda.getItens().size());
+        assertEquals(new BigDecimal("20.00"), venda.getValorTotal());
+    }
 }
