@@ -2,6 +2,7 @@ package com.farmosync.pdv.application.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,7 @@ public class ReceitaRequest {
     @NotBlank
     private String nomeMedico;
     @NotNull
+    @PastOrPresent
     private LocalDate dataEmissao;
     @NotBlank
     private String assinaturaDigital;
