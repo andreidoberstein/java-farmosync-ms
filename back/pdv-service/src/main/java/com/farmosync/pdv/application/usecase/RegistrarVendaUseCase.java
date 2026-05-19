@@ -52,9 +52,8 @@ public class RegistrarVendaUseCase {
 
         venda.calcularValorTotal();
 
-        Venda savedVenda = vendaRepository.salvar(venda);
-
-        vendaEventPublisher.publicarVendaEmitida(savedVenda);
+        String eventPayload = vendaEventPublisher.obterPayloadVendaEmitida(venda);
+        Venda savedVenda = vendaRepository.salvarComEvento(venda, eventPayload);
 
         return VendaResponse.builder()
                 .id(savedVenda.getId())

@@ -6,26 +6,21 @@ import com.farmosync.pdv.domain.model.Venda;
 import com.farmosync.pdv.infrastructure.messaging.event.ItemEvent;
 import com.farmosync.pdv.infrastructure.messaging.event.ReceitaEvent;
 import com.farmosync.pdv.infrastructure.messaging.event.VendaEvent;
-import com.farmosync.pdv.infrastructure.repository.document.OutboxEventDocument;
-import com.farmosync.pdv.infrastructure.repository.mongo.MongoOutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class KafkaVendaEventPublisher implements VendaEventPublisher {
-    private final MongoOutboxEventRepository outboxRepository;
     private final ObjectMapper objectMapper;
 
     @Override
-    public void publicarVendaEmitida(Venda venda) {
-        log.info("Recebida solicitacao para publicar evento de venda emitida. ID Venda: {}. Total: {}.", 
+    public String obterPayloadVendaEmitida(Venda venda) {
+        log.info("Recebida solicitacao para obter payload do evento de venda emitida. ID Venda: {}. Total: {}.", 
                 venda.getId(), venda.getValorTotal());
 
         List<ItemEvent> itemEvents = venda.getItens().stream()
@@ -61,22 +56,10 @@ public class KafkaVendaEventPublisher implements VendaEventPublisher {
                 .build();
 
         try {
-            String payload = objectMapper.writeValueAsString(event);
-            OutboxEventDocument outboxEvent = OutboxEventDocument.builder()
-                    .id(UUID.randomUUID().toString())
-                    .aggregateType("Venda")
-                    .aggregateId(venda.getId())
-                    .eventType("VendaEmitidaEvent")
-                    .payload(payload)
-                    .status("PENDING")
-                    .dataCriacao(LocalDateTime.now())
-                    .build();
-            outboxRepository.save(outboxEvent);
-            log.info("Intencao de evento do outbox ID: {} registrada com sucesso para a Venda ID: {}.", 
-                    outboxEvent.getId(), venda.getId());
+            return objectMapper.writeValueAsString(event);
         } catch (Exception e) {
-            log.error("Erro critico ao serializar ou persistir evento no Outbox para a Venda ID: {}.", venda.getId(), e);
-            throw new RuntimeException("Falha ao salvar evento no Outbox", e);
+            log.error("Erro critico ao serializar evento para a Venda ID: {}.", venda.getId(), e);
+            throw new RuntimeException("Falha ao mapear evento", e);
         }
     }
 }
