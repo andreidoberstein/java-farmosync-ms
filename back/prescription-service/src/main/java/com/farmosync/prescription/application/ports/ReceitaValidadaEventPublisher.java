@@ -1,7 +1,7 @@
 package com.farmosync.prescription.application.ports;
 
-import com.farmosync.prescription.infrastructure.messaging.event.ReceitaValidadaEvent;
+import com.farmosync.prescription.application.command.ReceitaValidadaDto;
 
 public interface ReceitaValidadaEventPublisher {
-    void publicarReceitaValidada(ReceitaValidadaEvent event);
+    void publicarReceitaValidada(ReceitaValidadaDto resultado);
 }

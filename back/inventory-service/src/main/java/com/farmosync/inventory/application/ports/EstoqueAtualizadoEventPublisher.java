@@ -1,7 +1,7 @@
 package com.farmosync.inventory.application.ports;
 
-import com.farmosync.inventory.infrastructure.messaging.event.EstoqueAtualizadoEvent;
+import com.farmosync.inventory.application.command.EstoqueAtualizadoDto;
 
 public interface EstoqueAtualizadoEventPublisher {
-    void publicarEstoqueAtualizado(EstoqueAtualizadoEvent event);
+    void publicarEstoqueAtualizado(EstoqueAtualizadoDto event);
 }

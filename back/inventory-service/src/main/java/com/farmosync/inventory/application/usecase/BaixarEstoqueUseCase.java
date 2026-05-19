@@ -1,12 +1,12 @@
 package com.farmosync.inventory.application.usecase;
 
+import com.farmosync.inventory.application.command.BaixarEstoqueCommand;
+import com.farmosync.inventory.application.command.EstoqueAtualizadoDto;
+import com.farmosync.inventory.application.command.ItemEstoqueAtualizadoDto;
+import com.farmosync.inventory.application.command.ItemVendaCommand;
 import com.farmosync.inventory.application.ports.EstoqueAtualizadoEventPublisher;
 import com.farmosync.inventory.domain.model.ProdutoEstoque;
 import com.farmosync.inventory.domain.repository.ProdutoEstoqueRepository;
-import com.farmosync.inventory.infrastructure.messaging.event.EstoqueAtualizadoEvent;
-import com.farmosync.inventory.infrastructure.messaging.event.ItemEstoqueAtualizadoEvent;
-import com.farmosync.inventory.infrastructure.messaging.event.ItemVendaEmitidoEvent;
-import com.farmosync.inventory.infrastructure.messaging.event.ReceitaValidadaEvent;
 import com.farmosync.inventory.infrastructure.repository.document.IdempotenceKeyDocument;
 import com.farmosync.inventory.infrastructure.repository.mongo.MongoIdempotenceKeyRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,29 +26,29 @@ public class BaixarEstoqueUseCase {
     private final EstoqueAtualizadoEventPublisher publisher;
     private final MongoIdempotenceKeyRepository idempotenceRepository;
 
-    public void processarBaixaEstoque(ReceitaValidadaEvent event) {
+    public void processarBaixaEstoque(BaixarEstoqueCommand command) {
         try {
             idempotenceRepository.insert(IdempotenceKeyDocument.builder()
-                    .id(event.getVendaId())
+                    .id(command.getVendaId())
                     .dataProcessamento(LocalDateTime.now())
                     .build());
         } catch (DuplicateKeyException e) {
             return;
         }
 
-        List<ItemEstoqueAtualizadoEvent> mappedItens = event.getItens() != null ? event.getItens().stream()
-                .map(i -> ItemEstoqueAtualizadoEvent.builder()
+        List<ItemEstoqueAtualizadoDto> mappedItens = command.getItens() != null ? command.getItens().stream()
+                .map(i -> ItemEstoqueAtualizadoDto.builder()
                         .produtoId(i.getProdutoId())
                         .numeroLote(i.getNumeroLote())
                         .quantidade(i.getQuantidade())
                         .build())
                 .collect(Collectors.toList()) : new ArrayList<>();
 
-        if (!"APROVADA".equalsIgnoreCase(event.getStatus())) {
-            EstoqueAtualizadoEvent erroEvent = EstoqueAtualizadoEvent.builder()
-                    .vendaId(event.getVendaId())
+        if (!"APROVADA".equalsIgnoreCase(command.getStatus())) {
+            EstoqueAtualizadoDto erroEvent = EstoqueAtualizadoDto.builder()
+                    .vendaId(command.getVendaId())
                     .status("ERRO")
-                    .motivoRejeicao("Receita medica rejeitada no PDV: " + event.getMotivoRejeicao())
+                    .motivoRejeicao("Receita medica rejeitada no PDV: " + command.getMotivoRejeicao())
                     .itens(mappedItens)
                     .build();
             publisher.publicarEstoqueAtualizado(erroEvent);
@@ -58,7 +58,7 @@ public class BaixarEstoqueUseCase {
         List<DeducaoLocal> deducoesEfetuadas = new ArrayList<>();
 
         try {
-            for (ItemVendaEmitidoEvent item : event.getItens()) {
+            for (ItemVendaCommand item : command.getItens()) {
                 ProdutoEstoque produto = repository.buscarPorId(item.getProdutoId())
                         .orElseThrow(() -> new IllegalArgumentException("Produto " + item.getProdutoId() + " nao cadastrado."));
 
@@ -78,8 +78,8 @@ public class BaixarEstoqueUseCase {
                 deducoesEfetuadas.add(new DeducaoLocal(item.getProdutoId(), item.getNumeroLote(), item.getQuantidade()));
             }
 
-            EstoqueAtualizadoEvent sucessoEvent = EstoqueAtualizadoEvent.builder()
-                    .vendaId(event.getVendaId())
+            EstoqueAtualizadoDto sucessoEvent = EstoqueAtualizadoDto.builder()
+                    .vendaId(command.getVendaId())
                     .status("SUCESSO")
                     .itens(mappedItens)
                     .build();
@@ -90,8 +90,8 @@ public class BaixarEstoqueUseCase {
                 repository.decrementarEstoqueAtomico(d.produtoId, d.numeroLote, -d.quantidade);
             }
 
-            EstoqueAtualizadoEvent erroEvent = EstoqueAtualizadoEvent.builder()
-                    .vendaId(event.getVendaId())
+            EstoqueAtualizadoDto erroEvent = EstoqueAtualizadoDto.builder()
+                    .vendaId(command.getVendaId())
                     .status("ERRO")
                     .motivoRejeicao(e.getMessage())
                     .itens(mappedItens)
